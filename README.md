@@ -207,7 +207,7 @@ npm run discover
 
 ## Hacktoberfest
 
-Built for [DEV Hacktoberfest 2026, Weekend Challenge #1: Build for a Friend](https://dev.to/challenges/hacktoberfest-weekend-2026-10-01). The draft post is [docs/devto-hacktoberfest-post.md](docs/devto-hacktoberfest-post.md). The model is an open-weight checkpoint behind an OpenAI-compatible proxy.
+Built for [DEV Hacktoberfest 2026, Weekend Challenge #1: Build for a Friend](https://dev.to/challenges/hacktoberfest-weekend-2026-10-01). The draft post is [docs/devto-hacktoberfest-post.md](docs/devto-hacktoberfest-post.md).
 
 ## License
 

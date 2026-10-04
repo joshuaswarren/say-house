@@ -8,7 +8,7 @@ A friend should not have to open the Hue app, or Home Assistant, to dim a room o
 
 Say House is one page for that. Tap Talk and say the sentence. The words show up as you speak, Send confirms them, and the house does the one thing on the list. Typing uses the same path.
 
-The repo is generic. The demo allowlist is a fictional home with sample entity ids. A real house stays in a gitignored `config.local.yaml`. Judges can run the whole story in mock mode with no bridge and no token.
+The repo is generic. The demo allowlist is a fictional home with sample entity ids. A real house stays in a gitignored `config.local.yaml`. Mock mode runs the story with no bridge and no token.
 
 ## Why the model stays local
 
