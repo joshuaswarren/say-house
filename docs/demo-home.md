@@ -2,7 +2,7 @@
 
 Say House is generic. This page is a fictional speakable map you can run with no hardware. The short starter is `config.example.yaml`. This longer sample is `config.example.demo-home.yaml`.
 
-Copy it to `config.local.yaml` (gitignored) and replace the `example_` entity ids with the rooms in your house. Do not commit that file. Do not commit tokens.
+Copy it to `config.local.yaml` (gitignored) and replace any ids that do not match your house. Do not commit that file. Do not commit tokens. `scene.kitchen_dimmed_2` is not on this list.
 
 ## Mock
 
@@ -35,27 +35,27 @@ Scenes are `scene.turn_on`. Room on and off are `light.turn_on` and `light.turn_
 
 | Say | Sample target | Call |
 | --- | --- | --- |
-| kitchen bright | `scene.example_kitchen_bright` | `scene.turn_on` |
-| kitchen relax | `scene.example_kitchen_relax` | `scene.turn_on` |
-| kitchen dim | `scene.example_kitchen_dim` | `scene.turn_on` |
-| kitchen on / off | `light.example_kitchen` | `light.turn_on` / `light.turn_off` |
-| living room bright | `scene.example_living_bright` | `scene.turn_on` |
-| living room relax | `scene.example_living_relax` | `scene.turn_on` |
-| living room on / off | `light.example_living_room` | light on / off |
-| downstairs bright | `scene.example_downstairs_bright` | `scene.turn_on` |
-| downstairs dim | `scene.example_downstairs_dim` | `scene.turn_on` |
-| downstairs nightlight, goodnight | `scene.example_downstairs_nightlight` | `scene.turn_on` |
-| movie lights, media room dim | `scene.example_media_dim` | `scene.turn_on` |
-| media room on / off | `light.example_media_room` | light on / off |
-| hallway sleep | `scene.example_hallway_sleep` | `scene.turn_on` |
-| bedroom on / off | `light.example_bedroom` | light on / off |
-| all lights off | `light.example_downstairs` and `light.example_upstairs` | `light.turn_off` after yes |
-| outdoor on / off | `light.example_porch`, `light.example_path`, `light.example_garden` | light on / off together |
-| dining room bright | `scene.example_dining_bright` | `scene.turn_on` |
-| dining room on / off | `light.example_dining` | light on / off |
-| entryway on / off | `light.example_entry` | light on / off |
-| game room relax | `scene.example_game_relax` | `scene.turn_on` |
-| game room on / off | `light.example_game_room` | light on / off |
+| kitchen bright | `scene.kitchen_bright` | `scene.turn_on` |
+| kitchen relax | `scene.kitchen_relax` | `scene.turn_on` |
+| kitchen dim | `scene.kitchen_dimmed` | `scene.turn_on` |
+| kitchen on / off | `light.kitchen` | `light.turn_on` / `light.turn_off` |
+| living room bright | `scene.living_room_bright` | `scene.turn_on` |
+| living room relax | `scene.living_room_relax` | `scene.turn_on` |
+| living room on / off | `light.living_room` | light on / off |
+| downstairs bright | `scene.downstairs_bright` | `scene.turn_on` |
+| downstairs dim | `scene.downstairs_dimmed` | `scene.turn_on` |
+| downstairs nightlight, goodnight | `scene.downstairs_nightlight` | `scene.turn_on` |
+| movie lights, media room dim | `scene.media_room_dimmed` | `scene.turn_on` |
+| media room on / off | `light.media_room` | light on / off |
+| hallway sleep | `scene.hallway_sleep` | `scene.turn_on` |
+| bedroom on / off | `light.master_bedroom` | light on / off |
+| all lights off | `light.downstairs` and `light.upstairs` | `light.turn_off` after yes |
+| outdoor on / off | `light.yard_light`, `light.driveway_light`, `light.front_light_3`, `light.gazebo_led`, `light.sidewalk_light`, `light.garden_light` | light on / off together |
+| dining room bright | `scene.dining_room_bright` | `scene.turn_on` |
+| dining room on / off | `light.dining_room` | light on / off |
+| entryway on / off | `light.entryway` | light on / off |
+| game room relax | `scene.game_room_relax` | `scene.turn_on` |
+| game room on / off | `light.game_room` | light on / off |
 
 Goodnight runs the downstairs nightlight and says there is no separate bedtime scene.
 

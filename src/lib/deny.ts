@@ -37,6 +37,7 @@ const BLOCKED_TOKENS = [
   "cover",
   "blinds",
   "water",
+  "waterfall",
   "valve",
   "security",
 ] as const;
@@ -63,7 +64,7 @@ const UTTERANCE_RULES: { pattern: RegExp; reply: string }[] = [
     reply: "Thermostats, pool heat, and HVAC vents aren't on the allowlist.",
   },
   {
-    pattern: /\b(?:sprinkler|irrigation|rachio|linktap|water)\b/,
+    pattern: /\b(?:sprinkler|irrigation|rachio|linktap|waterfall|water)\b/,
     reply: "I don't run water, sprinklers, or irrigation.",
   },
   {

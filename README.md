@@ -159,20 +159,20 @@ Full table: [docs/demo-home.md](docs/demo-home.md). The ids there are samples. R
 
 | Say | Action |
 | --- | --- |
-| kitchen bright / relax / dim | those three kitchen scenes |
-| kitchen on / off | the kitchen room light |
-| living room bright / relax | those scenes |
-| living room on / off | the living room light |
-| downstairs bright / dim / nightlight | those scenes; goodnight uses the nightlight |
-| movie lights | the media-room dim scene only |
-| media room on / off | the media room light |
-| hallway sleep | the hallway sleep scene |
-| bedroom on / off | the bedroom room light |
-| all lights off | downstairs and upstairs room lights, after yes |
-| outdoor on / off | the outdoor lights listed together, never a camera light |
-| dining room bright, dining room on/off | optional dining pair |
-| entryway on/off | the entryway light |
-| game room relax, game room on/off | optional game room pair |
+| kitchen bright / relax / dim | `scene.kitchen_bright`, `scene.kitchen_relax`, `scene.kitchen_dimmed` |
+| kitchen on / off | `light.kitchen` |
+| living room bright / relax | `scene.living_room_bright`, `scene.living_room_relax` |
+| living room on / off | `light.living_room` |
+| downstairs bright / dim / nightlight | `scene.downstairs_bright`, `scene.downstairs_dimmed`, `scene.downstairs_nightlight` |
+| movie lights | `scene.media_room_dimmed` only |
+| media room on / off | `light.media_room` |
+| hallway sleep | `scene.hallway_sleep` |
+| bedroom on / off | `light.master_bedroom` |
+| all lights off | `light.downstairs` and `light.upstairs`, after yes |
+| outdoor on / off | six outdoor lights together, never a camera light |
+| dining room bright, dining room on/off | `scene.dining_room_bright`, `light.dining_room` |
+| entryway on/off | `light.entryway` |
+| game room relax, game room on/off | `scene.game_room_relax`, `light.game_room` |
 
 ## Safety
 

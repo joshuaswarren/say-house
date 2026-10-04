@@ -46,6 +46,7 @@ function testDenyRules() {
   assert(entityBlockReason("switch.automation_all_lights_off"), "schedule switch should be blocked");
   assert(entityBlockReason("light.gate_camera_light"), "gate camera light should be blocked");
   assert(entityBlockReason("script.goodnight"), "scripts should be blocked");
+  assert(entityBlockReason("light.waterfall_accent"), "waterfall lights should be blocked");
   assert(entityBlockReason("lock.front_door"), "locks should be blocked");
   assert(entityBlockReason("cover.tesla_charge_port"), "covers should be blocked");
   assert(entityBlockReason("climate.downstairs"), "climate should be blocked");
@@ -107,13 +108,19 @@ function testConfigs() {
   assert(outdoor, "outdoor alias missing");
   assert(
     JSON.stringify(outdoor.homeassistant?.entityIds) ===
-      JSON.stringify(["light.example_porch", "light.example_path", "light.example_garden"]),
-    "outdoor lights are the fictional sample set",
+      JSON.stringify([
+        "light.yard_light",
+        "light.driveway_light",
+        "light.front_light_3",
+        "light.gazebo_led",
+        "light.sidewalk_light",
+        "light.garden_light",
+      ]),
+    "outdoor lights are the six public sample lights",
   );
   const allOff = demo.targets.find((target) => target.alias === "all lights off");
   assert(
-    JSON.stringify(allOff?.homeassistant?.entityIds) ===
-      JSON.stringify(["light.example_downstairs", "light.example_upstairs"]),
+    JSON.stringify(allOff?.homeassistant?.entityIds) === JSON.stringify(["light.downstairs", "light.upstairs"]),
     "all lights off is downstairs and upstairs room lights",
   );
   const prompt = buildSystemPrompt({
@@ -124,7 +131,8 @@ function testConfigs() {
   assert(prompt.includes("kitchen relax"), "prompt lists aliases");
   assert(!prompt.includes("super-secret-token"), "prompt must not include the HA token");
   assert(!prompt.includes("bridge-secret"), "prompt must not include the Hue key");
-  assert(!prompt.includes("light.example_bedroom"), "prompt must not include entity ids");
+  assert(!prompt.includes("light.master_bedroom"), "prompt must not include entity ids");
+  assert(!ids.includes("scene.kitchen_dimmed_2"), "duplicate kitchen dim scene stays off the list");
   assert(!prompt.includes("switch.automation_all_lights_off"), "prompt must not mention the schedule switch");
 
   const fenced = intentFromModelText('```json\n{"action":"turn_off","target_alias":"bedroom","brightness_pct":null}\n```');
@@ -140,25 +148,26 @@ async function testDemoHome() {
   const bright = await handleUtterance({ message: "brighten the kitchen", sessionId: "demo-bright", config });
   assert(bright.executed && bright.parser === "fallback", "kitchen bright should run via fallback");
   assert(getMockLog()[0]?.service === "scene.turn_on", "bright is a scene");
-  assert(getMockLog()[0]?.entityIds[0] === "scene.example_kitchen_bright", "kitchen bright entity");
+  assert(getMockLog()[0]?.entityIds[0] === "scene.kitchen_bright", "kitchen bright entity");
   assert(bright.reply.includes("bright"), bright.reply);
 
   reset();
   const dim = await handleUtterance({ message: "dim the kitchen", sessionId: "demo-dim", config });
-  assert(getMockLog()[0]?.entityIds[0] === "scene.example_kitchen_dim", dim.reply);
+  assert(getMockLog()[0]?.entityIds[0] === "scene.kitchen_dimmed", dim.reply);
+  assert(!getMockLog()[0]?.entityIds.includes("scene.kitchen_dimmed_2"), "ignored duplicate dim scene");
 
   reset();
   const off = await handleUtterance({ message: "turn the kitchen off", sessionId: "demo-off", config });
   assert(getMockLog()[0]?.service === "light.turn_off", off.reply);
-  assert(getMockLog()[0]?.entityIds[0] === "light.example_kitchen", "kitchen off is the room light");
+  assert(getMockLog()[0]?.entityIds[0] === "light.kitchen", "kitchen off is the room light");
 
   reset();
   const relax = await handleUtterance({ message: "living room relax", sessionId: "demo-relax", config });
-  assert(getMockLog()[0]?.entityIds[0] === "scene.example_living_relax", relax.reply);
+  assert(getMockLog()[0]?.entityIds[0] === "scene.living_room_relax", relax.reply);
 
   reset();
   const movie = await handleUtterance({ message: "movie lights", sessionId: "demo-movie", config });
-  assert(getMockLog()[0]?.entityIds[0] === "scene.example_media_dim", movie.reply);
+  assert(getMockLog()[0]?.entityIds[0] === "scene.media_room_dimmed", movie.reply);
   assert(movie.reply.includes("media room"), movie.reply);
 
   reset();
@@ -169,7 +178,7 @@ async function testDemoHome() {
 
   reset();
   const goodnight = await handleUtterance({ message: "goodnight", sessionId: "demo-goodnight", config });
-  assert(getMockLog()[0]?.entityIds[0] === "scene.example_downstairs_nightlight", goodnight.reply);
+  assert(getMockLog()[0]?.entityIds[0] === "scene.downstairs_nightlight", goodnight.reply);
   assert(goodnight.reply.toLowerCase().includes("nightlight"), goodnight.reply);
 
   reset();
@@ -178,29 +187,29 @@ async function testDemoHome() {
 
   reset();
   const hall = await handleUtterance({ message: "hallway sleep", sessionId: "demo-hall", config });
-  assert(getMockLog()[0]?.entityIds[0] === "scene.example_hallway_sleep", hall.reply);
+  assert(getMockLog()[0]?.entityIds[0] === "scene.hallway_sleep", hall.reply);
 
   reset();
   const bedroom = await handleUtterance({ message: "bedroom off", sessionId: "demo-bed-off", config });
   assert(
-    getMockLog()[0]?.service === "light.turn_off" && getMockLog()[0]?.entityIds[0] === "light.example_bedroom",
+    getMockLog()[0]?.service === "light.turn_off" && getMockLog()[0]?.entityIds[0] === "light.master_bedroom",
     bedroom.reply,
   );
 
   reset();
   const outdoor = await handleUtterance({ message: "outdoor on", sessionId: "demo-out", config });
   assert(getMockLog()[0]?.service === "light.turn_on", outdoor.reply);
-  assert(getMockLog()[0]?.entityIds.length === 3, "outdoor switches the sample lights together");
+  assert(getMockLog()[0]?.entityIds.length === 6, "outdoor switches the six sample lights together");
   assert(!getMockLog()[0]?.entityIds.some((id) => id.includes("camera")), "camera lights stay out");
 
   reset();
   const downstairs = await handleUtterance({ message: "downstairs dim", sessionId: "demo-down", config });
-  assert(getMockLog()[0]?.entityIds[0] === "scene.example_downstairs_dim", downstairs.reply);
+  assert(getMockLog()[0]?.entityIds[0] === "scene.downstairs_dimmed", downstairs.reply);
 
   reset();
   const mediaOff = await handleUtterance({ message: "turn the media room off", sessionId: "demo-media", config });
   assert(
-    getMockLog()[0]?.entityIds[0] === "light.example_media_room" && getMockLog()[0]?.service === "light.turn_off",
+    getMockLog()[0]?.entityIds[0] === "light.media_room" && getMockLog()[0]?.service === "light.turn_off",
     mediaOff.reply,
   );
 
@@ -234,7 +243,7 @@ async function testDemoHome() {
   assert(done.executed, done.reply);
   assert(getMockLog()[0]?.service === "light.turn_off", "all off uses light.turn_off");
   assert(
-    JSON.stringify(getMockLog()[0]?.entityIds) === JSON.stringify(["light.example_downstairs", "light.example_upstairs"]),
+    JSON.stringify(getMockLog()[0]?.entityIds) === JSON.stringify(["light.downstairs", "light.upstairs"]),
     "all off targets",
   );
 
@@ -306,12 +315,12 @@ async function testLlm(closers: Array<() => Promise<void>>) {
   reset();
   const cozy = await handleUtterance({ message: "make it cozy where we cook", sessionId: "llm-cozy", config });
   assert(cozy.parser === "llm" && cozy.modelUsed && cozy.executed, cozy.reply);
-  assert(getMockLog()[0]?.entityIds[0] === "scene.example_kitchen_relax", "model alias maps to the allowlisted scene");
+  assert(getMockLog()[0]?.entityIds[0] === "scene.kitchen_relax", "model alias maps to the allowlisted scene");
   assert(hits[0]?.raw.includes("kitchen relax"), "model request includes the alias");
   assert(hits[0]?.auth === "Bearer test-key", "model request sends the bearer key");
   assert(hits[0]?.raw.includes(DEFAULT_LLM_MODEL), "model request uses the configured alias");
   assert(!hits[0]?.raw.includes("super-secret-token"), "model request omits the token");
-  assert(!hits[0]?.raw.includes("light.example_bedroom"), "model request omits entity ids");
+  assert(!hits[0]?.raw.includes("light.master_bedroom"), "model request omits entity ids");
 
   reset();
   const invented = await handleUtterance({ message: "movie night", sessionId: "llm-movie", config });
@@ -324,7 +333,7 @@ async function testLlm(closers: Array<() => Promise<void>>) {
   reset();
   const down = await handleUtterance({ message: "proxy-down turn the kitchen off", sessionId: "llm-down", config });
   assert(down.parser === "fallback" && down.executed, down.reply);
-  assert(getMockLog()[0]?.entityIds[0] === "light.example_kitchen", "401 falls back to the keyword match");
+  assert(getMockLog()[0]?.entityIds[0] === "light.kitchen", "401 falls back to the keyword match");
 }
 
 async function testHomeAssistant(closers: Array<() => Promise<void>>) {
@@ -358,7 +367,7 @@ async function testHomeAssistant(closers: Array<() => Promise<void>>) {
   const bright = await handleUtterance({ message: "kitchen bright", sessionId: "ha-bright", config });
   assert(bright.executed, bright.reply);
   assert(hitPath(hits, 0) === "/api/services/scene/turn_on", hitPath(hits, 0) || "missing scene call");
-  assert(asIds(hits[0]?.body.entity_id)[0] === "scene.example_kitchen_bright", "scene.turn_on kitchen bright");
+  assert(asIds(hits[0]?.body.entity_id)[0] === "scene.kitchen_bright", "scene.turn_on kitchen bright");
   assert(hits[0]?.auth === "Bearer test-token", "bearer token");
 
   hits.length = 0;
@@ -366,7 +375,7 @@ async function testHomeAssistant(closers: Array<() => Promise<void>>) {
   const bedroom = await handleUtterance({ message: "bedroom off", sessionId: "ha-bed", config });
   assert(bedroom.executed, bedroom.reply);
   assert(hitPath(hits, 0) === "/api/services/light/turn_off", "room off is light.turn_off");
-  assert(asIds(hits[0]?.body.entity_id)[0] === "light.example_bedroom", "bedroom is the room entity");
+  assert(asIds(hits[0]?.body.entity_id)[0] === "light.master_bedroom", "bedroom is the room entity");
 
   hits.length = 0;
   reset();
@@ -376,7 +385,7 @@ async function testHomeAssistant(closers: Array<() => Promise<void>>) {
   assert(done.executed, done.reply);
   assert(hitPath(hits, 0) === "/api/services/light/turn_off", "all off is light.turn_off");
   assert(
-    JSON.stringify(asIds(hits[0]?.body.entity_id)) === JSON.stringify(["light.example_downstairs", "light.example_upstairs"]),
+    JSON.stringify(asIds(hits[0]?.body.entity_id)) === JSON.stringify(["light.downstairs", "light.upstairs"]),
     "both rooms",
   );
   assert(!JSON.stringify(hits).includes("automation_all_lights_off"), "schedule switch was not called");
@@ -386,7 +395,7 @@ async function testHomeAssistant(closers: Array<() => Promise<void>>) {
   const outdoor = await handleUtterance({ message: "outdoor off", sessionId: "ha-out", config });
   assert(outdoor.executed, outdoor.reply);
   const outdoorIds = asIds(hits[0]?.body.entity_id);
-  assert(outdoorIds.length === 3 && !outdoorIds.some((id) => id.includes("camera")), "sample outdoor lights, no camera");
+  assert(outdoorIds.length === 6 && !outdoorIds.some((id) => id.includes("camera")), "six outdoor lights, no camera");
 }
 
 async function testHue(closers: Array<() => Promise<void>>) {

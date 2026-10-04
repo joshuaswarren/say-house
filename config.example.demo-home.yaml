@@ -8,10 +8,10 @@
 # Scenes use scene.turn_on.
 # Room on/off uses light.turn_on / light.turn_off on a room or zone entity,
 # not individual bulbs.
-# All-off calls light.turn_off on the two room groups below.
+# All-off calls light.turn_off on light.downstairs and light.upstairs.
 # It must never call switch.automation_all_lights_off (that enables a Hue schedule).
-# Stock Hue formulas (Energize, Arctic aurora, and the rest) are omitted.
-# Camera lights stay off the outdoor list.
+# scene.kitchen_dimmed_2 is ignored. Stock Hue formulas (Energize, Arctic aurora, and the rest) are omitted.
+# Camera lights stay off the outdoor list. There is no outdoor group.
 
 household_name: Demo home
 tagline: Say it here. The Hue app can stay closed.
@@ -76,7 +76,7 @@ targets:
       - bright kitchen
     on_said: The kitchen is bright.
     homeassistant:
-      entity_id: scene.example_kitchen_bright
+      entity_id: scene.kitchen_bright
 
   - alias: kitchen relax
     label: Kitchen relax
@@ -87,7 +87,7 @@ targets:
       - relax kitchen
     on_said: The kitchen is relaxed.
     homeassistant:
-      entity_id: scene.example_kitchen_relax
+      entity_id: scene.kitchen_relax
 
   - alias: kitchen dim
     label: Kitchen dim
@@ -98,7 +98,7 @@ targets:
       - dim kitchen
     on_said: The kitchen is dim.
     homeassistant:
-      entity_id: scene.example_kitchen_dim
+      entity_id: scene.kitchen_dimmed
 
   - alias: kitchen
     label: Kitchen lights
@@ -110,7 +110,7 @@ targets:
       - kitchen on
       - kitchen off
     homeassistant:
-      entity_id: light.example_kitchen
+      entity_id: light.kitchen
 
   - alias: living room bright
     label: Living room bright
@@ -121,7 +121,7 @@ targets:
       - bright living room
     on_said: The living room is bright.
     homeassistant:
-      entity_id: scene.example_living_bright
+      entity_id: scene.living_room_bright
 
   - alias: living room relax
     label: Living room relax
@@ -132,7 +132,7 @@ targets:
       - relax living room
     on_said: The living room is relaxed.
     homeassistant:
-      entity_id: scene.example_living_relax
+      entity_id: scene.living_room_relax
 
   - alias: living room
     label: Living room lights
@@ -144,7 +144,7 @@ targets:
       - living room on
       - living room off
     homeassistant:
-      entity_id: light.example_living_room
+      entity_id: light.living_room
 
   - alias: downstairs bright
     label: Downstairs bright
@@ -155,7 +155,7 @@ targets:
       - bright downstairs
     on_said: Downstairs is bright.
     homeassistant:
-      entity_id: scene.example_downstairs_bright
+      entity_id: scene.downstairs_bright
 
   - alias: downstairs dim
     label: Downstairs dim
@@ -166,7 +166,7 @@ targets:
       - dim downstairs
     on_said: Downstairs is dim.
     homeassistant:
-      entity_id: scene.example_downstairs_dim
+      entity_id: scene.downstairs_dimmed
 
   - alias: downstairs nightlight
     label: Downstairs nightlight
@@ -182,7 +182,7 @@ targets:
       - good night
     on_said: Downstairs nightlight is on.
     homeassistant:
-      entity_id: scene.example_downstairs_nightlight
+      entity_id: scene.downstairs_nightlight
 
   - alias: movie lights
     label: Media room dim
@@ -199,7 +199,7 @@ targets:
       - theatre
     on_said: The media room is dimmed.
     homeassistant:
-      entity_id: scene.example_media_dim
+      entity_id: scene.media_room_dimmed
 
   - alias: media room
     label: Media room lights
@@ -211,7 +211,7 @@ targets:
       - media room on
       - media room off
     homeassistant:
-      entity_id: light.example_media_room
+      entity_id: light.media_room
 
   - alias: hallway sleep
     label: Hallway sleep
@@ -222,7 +222,7 @@ targets:
       - sleep hallway
     on_said: The hallway is on sleep.
     homeassistant:
-      entity_id: scene.example_hallway_sleep
+      entity_id: scene.hallway_sleep
 
   - alias: bedroom
     label: Bedroom lights
@@ -233,7 +233,7 @@ targets:
       - bedroom on
       - bedroom off
     homeassistant:
-      entity_id: light.example_bedroom
+      entity_id: light.master_bedroom
 
   - alias: all lights off
     label: Downstairs and upstairs lights
@@ -250,8 +250,8 @@ targets:
       - downstairs and upstairs
     homeassistant:
       entity_ids:
-        - light.example_downstairs
-        - light.example_upstairs
+        - light.downstairs
+        - light.upstairs
 
   - alias: outdoor
     label: Outdoor lights
@@ -264,9 +264,12 @@ targets:
       - outside lights
     homeassistant:
       entity_ids:
-        - light.example_porch
-        - light.example_path
-        - light.example_garden
+        - light.yard_light
+        - light.driveway_light
+        - light.front_light_3
+        - light.gazebo_led
+        - light.sidewalk_light
+        - light.garden_light
 
   - alias: dining room bright
     label: Dining room bright
@@ -277,7 +280,7 @@ targets:
       - dining bright
     on_said: The dining room is bright.
     homeassistant:
-      entity_id: scene.example_dining_bright
+      entity_id: scene.dining_room_bright
 
   - alias: dining room
     label: Dining room lights
@@ -289,7 +292,7 @@ targets:
       - dining room on
       - dining room off
     homeassistant:
-      entity_id: light.example_dining
+      entity_id: light.dining_room
 
   - alias: entryway
     label: Entryway lights
@@ -300,7 +303,7 @@ targets:
       - entry way
       - entryway lights
     homeassistant:
-      entity_id: light.example_entry
+      entity_id: light.entryway
 
   - alias: game room relax
     label: Game room relax
@@ -311,7 +314,7 @@ targets:
       - relax game room
     on_said: The game room is relaxed.
     homeassistant:
-      entity_id: scene.example_game_relax
+      entity_id: scene.game_room_relax
 
   - alias: game room
     label: Game room lights
@@ -323,4 +326,4 @@ targets:
       - game room on
       - game room off
     homeassistant:
-      entity_id: light.example_game_room
+      entity_id: light.game_room
