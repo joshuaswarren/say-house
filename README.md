@@ -1,0 +1,205 @@
+# Say House
+
+Say House is a small web page for someone who lives in a house and does not want another dashboard. They type “kitchen bright”, “bedroom off”, or “movie lights”. A local open-weight model turns that into one allowlisted action. Home Assistant or a Philips Hue bridge does the work. The Hue app can stay closed.
+
+The app is generic. `config.example.yaml` is a short fictional allowlist. `config.example.demo-home.yaml` is a longer fictional demo (see [docs/demo-home.md](docs/demo-home.md)). A real house belongs in `config.local.yaml` or `config.yaml`, both gitignored, with tokens in `.env` or `.env.local`. Nothing about a specific household is hardcoded.
+
+## Why a local model
+
+The sentence is about the house: which room, what “bright” means, whether the lights should go off. That does not need to leave the LAN to be parsed.
+
+Say House calls an OpenAI-compatible endpoint (`/v1/chat/completions`). The preferred setup is an existing LiteLLM proxy in front of an open-weight model:
+
+- LAN: `http://192.168.10.150:4000/v1`
+- Tailscale: `http://100.72.149.4:4000/v1`
+- Model alias: `qwen3.8-27b-64k-nothink` (no think trace). Fallback alias: `qwen3.8-27b-64k-fast`
+- Key: `LLM_API_KEY`, or `LITELLM_API_KEY`, or `OPENAI_API_KEY`
+
+A cloud machine often cannot reach those addresses. Mock mode and `npm run smoke` do not need them. Without `LLM_BASE_URL`, or when the proxy returns an error, a keyword backup maps the phrases already in the allowlist. That backup cannot skip the allowlist.
+
+Gemma is optional. Ollama, LM Studio, or any other server that speaks the same API works if you change `LLM_BASE_URL` and `LLM_MODEL`.
+
+The model may only name an alias from the allowlist. It never receives entity ids, the Home Assistant token, or the Hue application key. The server drops anything that is not on the list. A second hard deny blocks locks, garage doors, alarms, cameras, climate setpoints, water, vacuums, vents, scripts, and Hue schedule switches even if they were pasted into the file.
+
+## Privacy
+
+Household names, real entity lists, and secrets stay on the machine that runs the app.
+
+- Copy an example to `config.local.yaml` and edit it there.
+- Put `HA_TOKEN`, `HUE_APP_KEY`, and `LLM_API_KEY` in `.env` or `.env.local`.
+- Those files are gitignored. Do not commit them.
+
+## Run the mock in five minutes
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://127.0.0.1:47231](http://127.0.0.1:47231). The short sample is loaded. Try “movie night”, “kitchen bright”, or “turn the patio off”. Nothing is sent to a bridge.
+
+Check it:
+
+```bash
+npm run smoke
+```
+
+### Fictional demo home, still with no hardware
+
+```bash
+SAYHOUSE_CONFIG=config.example.demo-home.yaml npm run dev
+```
+
+That file defaults to `backend: mock`. The cheat sheet is [docs/demo-home.md](docs/demo-home.md).
+
+## LiteLLM in five minutes
+
+On a machine that can reach the proxy:
+
+```bash
+LLM_BASE_URL=http://192.168.10.150:4000/v1
+LLM_MODEL=qwen3.8-27b-64k-nothink
+LLM_API_KEY=your-local-key
+```
+
+Over Tailscale, use `http://100.72.149.4:4000/v1` instead. A request with no key gets `401`, which is expected. Restart `npm run dev`. The header shows the model name. A phrase that is not in the keyword list, such as “make it cozy where we cook” on the demo allowlist, only resolves if the model maps it to an alias like `kitchen relax`.
+
+The model is asked for JSON only:
+
+```json
+{"action":"activate_scene","target_alias":"kitchen relax","brightness_pct":null,"reason":"cozy kitchen"}
+```
+
+## Home Assistant in five minutes
+
+1. In Home Assistant: your profile → Security → Long-lived access tokens. Create one. It stays in `.env` only.
+2. Copy the allowlist:
+
+   ```bash
+   cp config.example.demo-home.yaml config.local.yaml
+   cp .env.example .env
+   ```
+
+3. Replace the sample `entity_id` values. Scenes are `scene.*`. Room on/off is the Hue **room or zone** `light.*` entity, not each bulb.
+4. In `.env`:
+
+   ```bash
+   BACKEND=homeassistant
+   HA_URL=http://homeassistant.rhino-beaver.ts.net:8123
+   HA_TOKEN=your-long-lived-token
+   ```
+
+   `HASS_TOKEN` is accepted as another name for the same token. `HA_URL` is the origin only, with no path and no token in the URL. `http://homeassistant.local:8123` works the same way on a LAN.
+
+5. `npm run dev`, then say something on the allowlist.
+
+`npm run discover` with those variables set prints `light` and `scene` entities that pass the deny list, and skips the rest.
+
+Service calls:
+
+- scene: `POST /api/services/scene/turn_on` with `entity_id`
+- room or light on: `POST /api/services/light/turn_on`
+- room or light off: `POST /api/services/light/turn_off`
+
+A broad target such as all lights off asks for yes first. In the demo that call is `light.turn_off` on the downstairs and upstairs room lights. It never calls `switch.automation_all_lights_off`.
+
+## Hue bridge in five minutes
+
+This is the local CLIP API v2. Entertainment areas are not required.
+
+1. On the bridge, press the link button.
+2. Create an application key (the same username the v1 API returns):
+
+   ```bash
+   curl -k -X POST "https://BRIDGE_IP/api" \
+     -H "content-type: application/json" \
+     -d '{"devicetype":"sayhouse#cli","generateclientkey":true}'
+   ```
+
+   If it says the link button was not pressed, press it and run the command again within about 30 seconds. The `username` in the response is `HUE_APP_KEY`.
+
+3. In `.env`:
+
+   ```bash
+   BACKEND=hue
+   HUE_BRIDGE_IP=192.168.1.2
+   HUE_APP_KEY=the-username
+   ```
+
+4. `npm run discover` lists rooms and scenes. For room on/off, copy the room’s `grouped_light` id, not every bulb. For a scene, copy the scene id.
+5. Put those ids on the allowlist:
+
+   ```yaml
+   hue:
+     id: YOUR_GROUPED_LIGHT_ID
+     rtype: grouped_light
+   ```
+
+   Scenes use `rtype: scene`. Say House recalls them with `{"recall":{"action":"active"}}`.
+
+The bridge uses a certificate your laptop will not trust. Say House turns certificate checks off only for the host in `HUE_BRIDGE_IP`, not for Home Assistant or the model.
+
+`REPLACE_WITH_...` ids in the short example are placeholders. Mock mode ignores them. The Hue backend refuses to call them until you replace them.
+
+## Allowlist
+
+Edit `config.local.yaml`. Each target has an alias, the words people say, a kind (`light` or `scene`), and either Home Assistant entity ids, Hue resources, or both.
+
+- `brightness: true` lets a light take “bright”, “dim”, or a percent. Leave it off when bright and dim are separate scenes, which is how the demo file works.
+- `actions: [turn_off]` limits a target. All-lights-off is turn-off only.
+- `broad: true` asks for yes before it runs.
+- `gaps` are phrases that should be refused in plain English instead of guessed. The demo file uses these for movie night, bedtime, dinner, porch, away, and stock Hue formulas.
+- `on_said` is the sentence the page shows after a scene starts.
+
+`DRY_RUN=true` in `.env` forces every command to describe itself and send nothing. The page also has a Dry run checkbox.
+
+## Demo aliases
+
+Full table: [docs/demo-home.md](docs/demo-home.md). The ids there are samples. Replace them locally.
+
+| Say | Action |
+| --- | --- |
+| kitchen bright / relax / dim | those three kitchen scenes |
+| kitchen on / off | the kitchen room light |
+| living room bright / relax | those scenes |
+| living room on / off | the living room light |
+| downstairs bright / dim / nightlight | those scenes; goodnight uses the nightlight |
+| movie lights | the media-room dim scene only |
+| media room on / off | the media room light |
+| hallway sleep | the hallway sleep scene |
+| bedroom on / off | the bedroom room light |
+| all lights off | downstairs and upstairs room lights, after yes |
+| outdoor on / off | the outdoor lights listed together, never a camera light |
+| dining room bright, dining room on/off | optional dining pair |
+| entryway on/off | the entryway light |
+| game room relax, game room on/off | optional game room pair |
+
+## Safety
+
+- The model proposes a structured alias. The server executes only allowlisted targets.
+- Home Assistant calls are only `light.turn_on`, `light.turn_off`, and `scene.turn_on`.
+- Name tokens such as garage, camera, lock, alarm, tesla, vacuum, and schedule are rejected at load time.
+- “All lights off” never touches `switch.automation_all_lights_off`.
+- There is no account system. Run it on the LAN. Do not put it on the public internet with a token in the environment.
+
+## Project layout
+
+- `src/app` — the page and `/api/chat`, `/api/health`
+- `src/lib` — config, model client, allowlist, Home Assistant, Hue, mock
+- `scripts/smoke.ts` — mock phrases, a fake model HTTP server, and both adapters against local fake servers
+- `scripts/discover.ts` — list HA entities or Hue rooms and scenes
+
+```bash
+npm run dev      # http://127.0.0.1:47231
+npm run smoke
+npm run lint
+npm run discover
+```
+
+## Hacktoberfest
+
+Built for [DEV Hacktoberfest 2026, Weekend Challenge #1: Build for a Friend](https://dev.to/challenges/hacktoberfest-weekend-2026-10-01). The draft post is [docs/devto-hacktoberfest-post.md](docs/devto-hacktoberfest-post.md). The model is an open-weight checkpoint behind an OpenAI-compatible proxy. This repo does not claim the partner prize categories.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

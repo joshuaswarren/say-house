@@ -1,0 +1,116 @@
+# Generic Say House allowlist.
+# Copy to config.yaml and replace the sample entity ids with yours.
+# Secrets (tokens, bridge keys) belong in .env, never in this file.
+#
+# A longer fictional demo lives in config.example.demo-home.yaml.
+# Copy either file to config.local.yaml for a real house. That file is gitignored.
+
+household_name: Home
+tagline: Plain English for the lights on your allowlist.
+
+# mock | homeassistant | hue
+# Override with BACKEND= in the environment.
+backend: mock
+
+confirm_broad_actions: true
+
+llm:
+  # OpenAI-compatible local server. Set LLM_BASE_URL in the environment.
+  # Preferred alias on a LiteLLM proxy: qwen3.8-27b-64k-nothink
+  model: qwen3.8-27b-64k-nothink
+
+suggestions:
+  - movie night
+  - bedtime
+  - kitchen bright
+  - turn the patio off
+
+gaps:
+  - phrases:
+      - party mode
+    reply: Party mode isn't on this allowlist. Add a scene alias in config.yaml if you want one.
+
+targets:
+  - alias: movie night
+    label: Movie night
+    kind: scene
+    phrases:
+      - movie night
+      - movie time
+    on_said: Movie night is on.
+    homeassistant:
+      entity_id: scene.movie_night
+    hue:
+      id: REPLACE_WITH_SCENE_ID
+      rtype: scene
+
+  - alias: bedtime
+    label: Bedtime
+    kind: scene
+    phrases:
+      - bedtime
+      - time for bed
+    on_said: Bedtime is on.
+    homeassistant:
+      entity_id: scene.bedtime
+    hue:
+      id: REPLACE_WITH_SCENE_ID
+      rtype: scene
+
+  - alias: kitchen
+    label: Kitchen lights
+    kind: light
+    brightness: true
+    phrases:
+      - kitchen
+      - kitchen lights
+    homeassistant:
+      entity_id: light.kitchen
+    hue:
+      # Room on/off uses the Hue room's grouped_light, not each bulb.
+      id: REPLACE_WITH_GROUPED_LIGHT_ID
+      rtype: grouped_light
+
+  - alias: patio
+    label: Patio lights
+    kind: light
+    brightness: true
+    phrases:
+      - patio
+      - patio lights
+    homeassistant:
+      entity_id: light.patio
+    hue:
+      id: REPLACE_WITH_GROUPED_LIGHT_ID
+      rtype: grouped_light
+
+  - alias: living room
+    label: Living room lights
+    kind: light
+    phrases:
+      - living room
+      - living room lights
+    homeassistant:
+      entity_id: light.living_room
+    hue:
+      id: REPLACE_WITH_GROUPED_LIGHT_ID
+      rtype: grouped_light
+
+  # Broad off asks for confirmation. Replace the two groups with your own.
+  # Do not point this at a schedule switch.
+  - alias: all lights off
+    label: Downstairs and upstairs lights
+    kind: light
+    broad: true
+    actions:
+      - turn_off
+    confirm: This turns off the two light groups on the allowlist. It does not run scripts or schedule switches.
+    phrases:
+      - all lights off
+      - all the lights off
+      - everything off
+      - whole house off
+    homeassistant:
+      entity_ids:
+        - light.downstairs_group
+        - light.upstairs_group

@@ -1,0 +1,326 @@
+# Fictional demo home. Not a real house, and not the product default.
+# Run it in mock mode with no hardware:
+#   SAYHOUSE_CONFIG=config.example.demo-home.yaml npm run dev
+#
+# A real allowlist belongs in config.local.yaml (gitignored) or config.yaml.
+# Tokens stay in .env / .env.local. Do not commit either.
+#
+# Scenes use scene.turn_on.
+# Room on/off uses light.turn_on / light.turn_off on a room or zone entity,
+# not individual bulbs.
+# All-off calls light.turn_off on the two room groups below.
+# It must never call switch.automation_all_lights_off (that enables a Hue schedule).
+# Stock Hue formulas (Energize, Arctic aurora, and the rest) are omitted.
+# Camera lights stay off the outdoor list.
+
+household_name: Demo home
+tagline: Say it here. The Hue app can stay closed.
+
+backend: mock
+confirm_broad_actions: true
+
+llm:
+  model: qwen3.8-27b-64k-nothink
+
+suggestions:
+  - kitchen bright
+  - movie lights
+  - goodnight
+  - bedroom off
+  - outdoor off
+  - all lights off
+
+gaps:
+  - phrases:
+      - movie night
+      - theater
+      - theatre
+    reply: There's no movie-night scene. Say “movie lights” and I'll dim the media room.
+  - phrases:
+      - bedtime
+      - time for bed
+      - go to bed
+    reply: There's no bedtime scene. Say “downstairs nightlight” or “hallway sleep”.
+  - phrases:
+      - dinner
+      - dinner time
+    reply: There's no dinner scene. You can say “dining room bright” or “dining room on”.
+  - phrases:
+      - porch
+      - patio
+      - front porch
+    reply: There's no porch or patio scene. Say “outdoor on” or “outdoor off”.
+  - phrases:
+      - away
+      - away mode
+      - im home
+      - im away
+      - home mode
+    reply: There's no away or home scene on the allowlist.
+  - phrases:
+      - energize
+      - arctic
+      - arctic aurora
+      - concentrate
+      - savanna sunset
+      - spring blossom
+    reply: Stock Hue formulas stay off this allowlist. Try kitchen bright, living room relax, or movie lights.
+
+targets:
+  - alias: kitchen bright
+    label: Kitchen bright
+    kind: scene
+    family: kitchen
+    phrases:
+      - kitchen bright
+      - bright kitchen
+    on_said: The kitchen is bright.
+    homeassistant:
+      entity_id: scene.example_kitchen_bright
+
+  - alias: kitchen relax
+    label: Kitchen relax
+    kind: scene
+    family: kitchen
+    phrases:
+      - kitchen relax
+      - relax kitchen
+    on_said: The kitchen is relaxed.
+    homeassistant:
+      entity_id: scene.example_kitchen_relax
+
+  - alias: kitchen dim
+    label: Kitchen dim
+    kind: scene
+    family: kitchen
+    phrases:
+      - kitchen dim
+      - dim kitchen
+    on_said: The kitchen is dim.
+    homeassistant:
+      entity_id: scene.example_kitchen_dim
+
+  - alias: kitchen
+    label: Kitchen lights
+    kind: light
+    family: kitchen
+    phrases:
+      - kitchen
+      - kitchen lights
+      - kitchen on
+      - kitchen off
+    homeassistant:
+      entity_id: light.example_kitchen
+
+  - alias: living room bright
+    label: Living room bright
+    kind: scene
+    family: living
+    phrases:
+      - living room bright
+      - bright living room
+    on_said: The living room is bright.
+    homeassistant:
+      entity_id: scene.example_living_bright
+
+  - alias: living room relax
+    label: Living room relax
+    kind: scene
+    family: living
+    phrases:
+      - living room relax
+      - relax living room
+    on_said: The living room is relaxed.
+    homeassistant:
+      entity_id: scene.example_living_relax
+
+  - alias: living room
+    label: Living room lights
+    kind: light
+    family: living
+    phrases:
+      - living room
+      - living room lights
+      - living room on
+      - living room off
+    homeassistant:
+      entity_id: light.example_living_room
+
+  - alias: downstairs bright
+    label: Downstairs bright
+    kind: scene
+    family: downstairs
+    phrases:
+      - downstairs bright
+      - bright downstairs
+    on_said: Downstairs is bright.
+    homeassistant:
+      entity_id: scene.example_downstairs_bright
+
+  - alias: downstairs dim
+    label: Downstairs dim
+    kind: scene
+    family: downstairs
+    phrases:
+      - downstairs dim
+      - dim downstairs
+    on_said: Downstairs is dim.
+    homeassistant:
+      entity_id: scene.example_downstairs_dim
+
+  - alias: downstairs nightlight
+    label: Downstairs nightlight
+    kind: scene
+    family: downstairs
+    phrases:
+      - downstairs nightlight
+      - nightlight
+      - goodnight
+    aside: There isn't a separate goodnight or bedtime scene — this is the downstairs nightlight.
+    aside_when:
+      - goodnight
+      - good night
+    on_said: Downstairs nightlight is on.
+    homeassistant:
+      entity_id: scene.example_downstairs_nightlight
+
+  - alias: movie lights
+    label: Media room dim
+    kind: scene
+    family: media
+    phrases:
+      - movie lights
+      - media room dim
+      - dim media room
+    aside: There isn't a movie-night scene — this dims the media room.
+    aside_when:
+      - movie
+      - theater
+      - theatre
+    on_said: The media room is dimmed.
+    homeassistant:
+      entity_id: scene.example_media_dim
+
+  - alias: media room
+    label: Media room lights
+    kind: light
+    family: media
+    phrases:
+      - media room
+      - media room lights
+      - media room on
+      - media room off
+    homeassistant:
+      entity_id: light.example_media_room
+
+  - alias: hallway sleep
+    label: Hallway sleep
+    kind: scene
+    family: hallway
+    phrases:
+      - hallway sleep
+      - sleep hallway
+    on_said: The hallway is on sleep.
+    homeassistant:
+      entity_id: scene.example_hallway_sleep
+
+  - alias: bedroom
+    label: Bedroom lights
+    kind: light
+    family: bedroom
+    phrases:
+      - bedroom
+      - bedroom on
+      - bedroom off
+    homeassistant:
+      entity_id: light.example_bedroom
+
+  - alias: all lights off
+    label: Downstairs and upstairs lights
+    kind: light
+    broad: true
+    actions:
+      - turn_off
+    confirm: This turns the downstairs and upstairs room lights off. It does not enable a Hue schedule.
+    phrases:
+      - all lights off
+      - all the lights off
+      - everything off
+      - whole house off
+      - downstairs and upstairs
+    homeassistant:
+      entity_ids:
+        - light.example_downstairs
+        - light.example_upstairs
+
+  - alias: outdoor
+    label: Outdoor lights
+    kind: light
+    family: outdoor
+    phrases:
+      - outdoor
+      - outdoor lights
+      - outside
+      - outside lights
+    homeassistant:
+      entity_ids:
+        - light.example_porch
+        - light.example_path
+        - light.example_garden
+
+  - alias: dining room bright
+    label: Dining room bright
+    kind: scene
+    family: dining
+    phrases:
+      - dining room bright
+      - dining bright
+    on_said: The dining room is bright.
+    homeassistant:
+      entity_id: scene.example_dining_bright
+
+  - alias: dining room
+    label: Dining room lights
+    kind: light
+    family: dining
+    phrases:
+      - dining room
+      - dining room lights
+      - dining room on
+      - dining room off
+    homeassistant:
+      entity_id: light.example_dining
+
+  - alias: entryway
+    label: Entryway lights
+    kind: light
+    family: entryway
+    phrases:
+      - entryway
+      - entry way
+      - entryway lights
+    homeassistant:
+      entity_id: light.example_entry
+
+  - alias: game room relax
+    label: Game room relax
+    kind: scene
+    family: game
+    phrases:
+      - game room relax
+      - relax game room
+    on_said: The game room is relaxed.
+    homeassistant:
+      entity_id: scene.example_game_relax
+
+  - alias: game room
+    label: Game room lights
+    kind: light
+    family: game
+    phrases:
+      - game room
+      - game room lights
+      - game room on
+      - game room off
+    homeassistant:
+      entity_id: light.example_game_room
