@@ -16,8 +16,7 @@ The sentence is about the house. Which room, what “bright” means, whether ev
 
 Say House talks to an OpenAI-compatible local server. The one this house already runs is a LiteLLM proxy in front of an open-weight model:
 
-- LAN base URL: `http://192.168.10.150:4000/v1`
-- Tailscale base URL: `http://100.72.149.4:4000/v1`
+- Base URL: `http://LITELLM_HOST:4000/v1` (set `LLM_BASE_URL` in gitignored `.env`; a LAN or Tailscale host stays there)
 - Preferred alias: `qwen3.8-27b-64k-nothink`
 - Fallback alias: `qwen3.8-27b-64k-fast`
 - Bearer key from `LLM_API_KEY` (or `LITELLM_API_KEY` / `OPENAI_API_KEY`), never committed
@@ -46,9 +45,5 @@ Locks, the garage, alarms, cameras, climate setpoints, water, vacuums, vents, an
 8. “open the garage” → refused
 9. Tick Dry run, then “bedroom off” → the sentence, and nothing sent
 10. Point `LLM_BASE_URL` at the proxy and try “make it cozy where we cook” → `kitchen relax`, if the model is up
-
-## Honest category note
-
-This is a Build for a Friend weekend project. The open-model piece is a local open-weight model behind an OpenAI-compatible proxy. I am not claiming Render, TabPFN, Tinker, Arduino, DigitalOcean, or the partner categories (Backboard, ElevenLabs, Entire, GitHub Copilot, Mastra, MongoDB Atlas, Sentry, SerpApi, Temporal, Tiger Data).
 
 MIT license. Mock mode needs no keys.
