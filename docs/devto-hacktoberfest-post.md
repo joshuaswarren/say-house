@@ -6,7 +6,7 @@ Tags: `#devchallenge` `#weekendchallenge` `#hf26challenge`
 
 A friend should not have to open the Hue app, or Home Assistant, to dim a room or turn a bedroom light off. They already know the words. “Kitchen bright.” “Movie lights.” “All lights off.”
 
-Say House is one page for that. Type a sentence. The house does the one thing on the list, and the page says what it did.
+Say House is one page for that. Tap Talk and say the sentence. The words show up as you speak, Send confirms them, and the house does the one thing on the list. Typing uses the same path.
 
 The repo is generic. The demo allowlist is a fictional home with sample entity ids. A real house stays in a gitignored `config.local.yaml`. Judges can run the whole story in mock mode with no bridge and no token.
 

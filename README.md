@@ -1,8 +1,16 @@
 # Say House
 
-Say House is a small web page for someone who lives in a house and does not want another dashboard. They type “kitchen bright”, “bedroom off”, or “movie lights”. A local open-weight model turns that into one allowlisted action. Home Assistant or a Philips Hue bridge does the work. The Hue app can stay closed.
+Say House is a small web page for someone who lives in a house and does not want another dashboard. They say “kitchen bright”, “bedroom off”, or “movie lights”. A local open-weight model turns that into one allowlisted action. Home Assistant or a Philips Hue bridge does the work. The Hue app can stay closed.
 
 The app is generic. `config.example.yaml` is a short fictional allowlist. `config.example.demo-home.yaml` is a longer fictional demo (see [docs/demo-home.md](docs/demo-home.md)). A real house belongs in `config.local.yaml` or `config.yaml`, both gitignored, with tokens in `.env` or `.env.local`. Nothing about a specific household is hardcoded.
+
+## Talk
+
+Talk is the main control. Tap it, say what you want, and the interim transcript shows up as you speak. Send puts those words through the same allowlist as typing. Edit the line first if the browser misheard.
+
+The browser asks for the microphone the first time. Say House does not upload that audio and does not need a speech-vendor account. Chrome and Edge may still use the browser's own speech service to write the transcript. What this app receives is the text you send.
+
+Talk needs a secure page: `https`, or `http://127.0.0.1` / `http://localhost`. If the browser has no Web Speech API, the page says so and typing still works. That is common on Firefox, and on Safari versions without speech recognition.
 
 ## Why a local model
 
@@ -27,6 +35,7 @@ Household names, real entity lists, and secrets stay on the machine that runs th
 - Copy an example to `config.local.yaml` and edit it there.
 - Put `HA_TOKEN`, `HUE_APP_KEY`, and `LLM_API_KEY` in `.env` or `.env.local`.
 - Put Tailscale and LAN URLs in those same gitignored files: `LLM_BASE_URL`, `HA_URL`, and the Hue bridge host. `config.local.yaml` is the other gitignored place for house-specific config.
+- Microphone audio stays in the browser. This app only receives the text you send.
 - Those files are gitignored. Do not commit them.
 
 ## Run the mock in five minutes
@@ -36,7 +45,7 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:47231](http://127.0.0.1:47231). The short sample is loaded. Try “movie night”, “kitchen bright”, or “turn the patio off”. Nothing is sent to a bridge.
+Open [http://127.0.0.1:47231](http://127.0.0.1:47231). The short sample is loaded. Tap Talk and say “kitchen bright”, or type it. Nothing is sent to a bridge.
 
 Check it:
 

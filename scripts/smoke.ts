@@ -11,6 +11,7 @@ import { parseFallback } from "../src/lib/fallback";
 import { buildSystemPrompt, intentFromModelText } from "../src/lib/llm";
 import { resetPending } from "../src/lib/pending";
 import { handleUtterance } from "../src/lib/orchestrator";
+import { joinHeard, speechBlockedReason, speechErrorCopy, transcriptFromResults } from "../src/lib/speech";
 import type { AppConfig } from "../src/lib/types";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -30,6 +31,7 @@ async function main() {
   const closers: Array<() => Promise<void>> = [];
   try {
     testDenyRules();
+    testSpeechCopy();
     testConfigs();
     await testDemoHome();
     await testGenericMock();
@@ -40,6 +42,24 @@ async function main() {
   } finally {
     await Promise.all(closers.map((close) => close().catch(() => undefined)));
   }
+}
+
+function testSpeechCopy() {
+  assert(speechBlockedReason(true, true) === null, "secure browsers with speech stay available");
+  assert(
+    speechBlockedReason(true, false)?.includes("localhost") === true,
+    "insecure pages explain the https or localhost requirement",
+  );
+  const missing = speechBlockedReason(false, true) ?? "";
+  assert(missing.includes("Safari") && missing.includes("type"), "missing speech API points at Safari and typing");
+  assert(speechErrorCopy("not-allowed").includes("microphone"), "permission errors name the microphone");
+  assert(!speechErrorCopy("network").toLowerCase().includes("vendor key"), "network errors do not ask for a speech vendor");
+  const heard = transcriptFromResults([
+    { isFinal: true, length: 1, 0: { transcript: "kitchen " } },
+    { isFinal: false, length: 1, 0: { transcript: "bri" } },
+  ]);
+  assert(joinHeard(heard.finalText, heard.interimText) === "kitchen bri", "interim transcript stays visible before the phrase finishes");
+  assert(joinHeard("kitchen", "bright") === "kitchen bright", "a finished phrase is the text that gets sent");
 }
 
 function testDenyRules() {
