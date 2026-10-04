@@ -22,12 +22,12 @@ Edit the entity ids, then:
 
 ```bash
 BACKEND=homeassistant \
-HA_URL=http://homeassistant.rhino-beaver.ts.net:8123 \
+HA_URL=http://homeassistant.local:8123 \
 HA_TOKEN=your-token \
 npm run dev
 ```
 
-`HASS_TOKEN` is the same token under another name. The URL above is one Tailscale reach path. `HA_URL` can be any origin. The token is never stored in the repo.
+`HASS_TOKEN` is the same token under another name. `HA_URL` is the origin only. A Tailscale or LAN URL belongs in gitignored `.env`, not in the repo. The token is never stored in the repo.
 
 Scenes are `scene.turn_on`. Room on and off are `light.turn_on` and `light.turn_off` on the room or zone entity, not each bulb.
 

@@ -1,8 +1,16 @@
 # Say House
 
-Say House is a small web page for someone who lives in a house and does not want another dashboard. They type “kitchen bright”, “bedroom off”, or “movie lights”. A local open-weight model turns that into one allowlisted action. Home Assistant or a Philips Hue bridge does the work. The Hue app can stay closed.
+Say House is a small web page for someone who lives in a house and does not want another dashboard. They say “kitchen bright”, “bedroom off”, or “movie lights”. A local open-weight model turns that into one allowlisted action. Home Assistant or a Philips Hue bridge does the work. The Hue app can stay closed.
 
 The app is generic. `config.example.yaml` is a short fictional allowlist. `config.example.demo-home.yaml` is a longer fictional demo (see [docs/demo-home.md](docs/demo-home.md)). A real house belongs in `config.local.yaml` or `config.yaml`, both gitignored, with tokens in `.env` or `.env.local`. Nothing about a specific household is hardcoded.
+
+## Talk
+
+Talk is the main control. Tap it, say what you want, and the interim transcript shows up as you speak. Send puts those words through the same allowlist as typing. Edit the line first if the browser misheard.
+
+The browser asks for the microphone the first time. Say House does not upload that audio and does not need a speech-vendor account. Chrome and Edge may still use the browser's own speech service to write the transcript. What this app receives is the text you send.
+
+Talk needs a secure page: `https`, or `http://127.0.0.1` / `http://localhost`. If the browser has no Web Speech API, the page says so and typing still works. That is common on Firefox, and on Safari versions without speech recognition.
 
 ## Why a local model
 
@@ -10,12 +18,11 @@ The sentence is about the house: which room, what “bright” means, whether th
 
 Say House calls an OpenAI-compatible endpoint (`/v1/chat/completions`). The preferred setup is an existing LiteLLM proxy in front of an open-weight model:
 
-- LAN: `http://192.168.10.150:4000/v1`
-- Tailscale: `http://100.72.149.4:4000/v1`
+- Base URL: `http://LITELLM_HOST:4000/v1` (`LLM_BASE_URL`)
 - Model alias: `qwen3.8-27b-64k-nothink` (no think trace). Fallback alias: `qwen3.8-27b-64k-fast`
 - Key: `LLM_API_KEY`, or `LITELLM_API_KEY`, or `OPENAI_API_KEY`
 
-A cloud machine often cannot reach those addresses. Mock mode and `npm run smoke` do not need them. Without `LLM_BASE_URL`, or when the proxy returns an error, a keyword backup maps the phrases already in the allowlist. That backup cannot skip the allowlist.
+A cloud machine often cannot reach a LAN or Tailscale address. Put that real URL in gitignored `.env` or `.env.local` only. Mock mode and `npm run smoke` do not need it. Without `LLM_BASE_URL`, or when the proxy returns an error, a keyword backup maps the phrases already in the allowlist. That backup cannot skip the allowlist.
 
 Gemma is optional. Ollama, LM Studio, or any other server that speaks the same API works if you change `LLM_BASE_URL` and `LLM_MODEL`.
 
@@ -27,6 +34,8 @@ Household names, real entity lists, and secrets stay on the machine that runs th
 
 - Copy an example to `config.local.yaml` and edit it there.
 - Put `HA_TOKEN`, `HUE_APP_KEY`, and `LLM_API_KEY` in `.env` or `.env.local`.
+- Put Tailscale and LAN URLs in those same gitignored files: `LLM_BASE_URL`, `HA_URL`, and the Hue bridge host. `config.local.yaml` is the other gitignored place for house-specific config.
+- Microphone audio stays in the browser. This app only receives the text you send.
 - Those files are gitignored. Do not commit them.
 
 ## Run the mock in five minutes
@@ -36,7 +45,7 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:47231](http://127.0.0.1:47231). The short sample is loaded. Try “movie night”, “kitchen bright”, or “turn the patio off”. Nothing is sent to a bridge.
+Open [http://127.0.0.1:47231](http://127.0.0.1:47231). The short sample is loaded. Tap Talk and say “kitchen bright”, or type it. Nothing is sent to a bridge.
 
 Check it:
 
@@ -57,12 +66,12 @@ That file defaults to `backend: mock`. The cheat sheet is [docs/demo-home.md](do
 On a machine that can reach the proxy:
 
 ```bash
-LLM_BASE_URL=http://192.168.10.150:4000/v1
+LLM_BASE_URL=http://LITELLM_HOST:4000/v1
 LLM_MODEL=qwen3.8-27b-64k-nothink
 LLM_API_KEY=your-local-key
 ```
 
-Over Tailscale, use `http://100.72.149.4:4000/v1` instead. A request with no key gets `401`, which is expected. Restart `npm run dev`. The header shows the model name. A phrase that is not in the keyword list, such as “make it cozy where we cook” on the demo allowlist, only resolves if the model maps it to an alias like `kitchen relax`.
+Use your LAN or Tailscale address for `LITELLM_HOST`, and keep that URL in gitignored `.env`. A request with no key gets `401`, which is expected. Restart `npm run dev`. The header shows the model name. A phrase that is not in the keyword list, such as “make it cozy where we cook” on the demo allowlist, only resolves if the model maps it to an alias like `kitchen relax`.
 
 The model is asked for JSON only:
 
@@ -85,11 +94,11 @@ The model is asked for JSON only:
 
    ```bash
    BACKEND=homeassistant
-   HA_URL=http://homeassistant.rhino-beaver.ts.net:8123
+   HA_URL=http://homeassistant.local:8123
    HA_TOKEN=your-long-lived-token
    ```
 
-   `HASS_TOKEN` is accepted as another name for the same token. `HA_URL` is the origin only, with no path and no token in the URL. `http://homeassistant.local:8123` works the same way on a LAN.
+   `HASS_TOKEN` is accepted as another name for the same token. `HA_URL` is the origin only, with no path and no token in the URL. A Tailscale MagicDNS name or other private URL belongs in gitignored `.env` only.
 
 5. `npm run dev`, then say something on the allowlist.
 
@@ -122,7 +131,7 @@ This is the local CLIP API v2. Entertainment areas are not required.
 
    ```bash
    BACKEND=hue
-   HUE_BRIDGE_IP=192.168.1.2
+   HUE_BRIDGE_IP=<bridge-ip>
    HUE_APP_KEY=the-username
    ```
 
@@ -198,7 +207,7 @@ npm run discover
 
 ## Hacktoberfest
 
-Built for [DEV Hacktoberfest 2026, Weekend Challenge #1: Build for a Friend](https://dev.to/challenges/hacktoberfest-weekend-2026-10-01). The draft post is [docs/devto-hacktoberfest-post.md](docs/devto-hacktoberfest-post.md). The model is an open-weight checkpoint behind an OpenAI-compatible proxy. This repo does not claim the partner prize categories.
+Built for [DEV Hacktoberfest 2026, Weekend Challenge #1: Build for a Friend](https://dev.to/challenges/hacktoberfest-weekend-2026-10-01). The draft post is [docs/devto-hacktoberfest-post.md](docs/devto-hacktoberfest-post.md).
 
 ## License
 

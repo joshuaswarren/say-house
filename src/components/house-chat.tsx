@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useHouseSpeech } from "@/components/use-house-speech";
 import type { HealthInfo, Tone } from "@/lib/types";
 
 type Bubble = {
@@ -24,13 +26,14 @@ export function HouseChat() {
     {
       id: 0,
       role: "assistant",
-      text: "Tell me what you want the house to do. I'll only change lights and scenes on the allowlist.",
+      text: "Say what you want the house to do. I'll only change lights and scenes on the allowlist.",
       tone: "ok",
     },
   ]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [dryRun, setDryRun] = useState(false);
+  const speech = useHouseSpeech((text) => setDraft(text));
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +60,7 @@ export function HouseChat() {
 
   async function send(text: string) {
     const message = text.trim();
+    speech.stop();
     if (!message || sending || healthError) return;
     setDraft("");
     setMessages((current) => [...current, { id: bubbleId++, role: "user", text: message }]);
@@ -97,6 +101,8 @@ export function HouseChat() {
     }
   }
 
+  const phrase = (speech.listening ? speech.liveText : draft).trim();
+  const phraseReady = phrase.length > 0;
   const last = messages[messages.length - 1];
   const showConfirm = last?.role === "assistant" && last.tone === "confirm" && !sending;
   const showChips = messages.length <= 1 && !sending && (health?.suggestions.length ?? 0) > 0;
@@ -121,7 +127,7 @@ export function HouseChat() {
           {health && !health.llmConfigured ? (
             <p className="mt-3 text-sm leading-5 text-muted-foreground">
               Keyword backup is on. Point <span className="font-medium text-foreground">LLM_BASE_URL</span> at a local
-              OpenAI-compatible server and an open-weight model will parse what you type.
+              OpenAI-compatible server and an open-weight model will parse what you say.
             </p>
           ) : null}
           {health && !health.backendReady ? (
@@ -138,7 +144,7 @@ export function HouseChat() {
               showBackup={message.modelUsed === false && Boolean(health?.llmConfigured)}
             />
           ))}
-          {sending ? <p className="text-sm text-muted-foreground">Listening…</p> : null}
+          {sending ? <p className="text-sm text-muted-foreground">Asking the house…</p> : null}
           {showChips ? (
             <div className="flex flex-wrap gap-2 pt-1">
               {health?.suggestions.map((suggestion) => (
@@ -171,25 +177,57 @@ export function HouseChat() {
           className="shrink-0 border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           onSubmit={(event) => {
             event.preventDefault();
-            void send(draft);
+            void send(speech.listening ? speech.liveText : draft);
           }}
         >
-          <div className="flex items-center gap-2">
+          {speech.supported ? (
+            <Button
+              type="button"
+              variant={phraseReady ? "outline" : "default"}
+              className="h-14 w-full text-lg"
+              aria-pressed={speech.listening}
+              disabled={sending || Boolean(healthError)}
+              onClick={() => {
+                if (speech.listening) {
+                  const heard = speech.liveText.trim();
+                  speech.stop();
+                  if (heard) setDraft(heard);
+                  return;
+                }
+                setDraft("");
+                speech.start();
+              }}
+            >
+              <Mic aria-hidden="true" />
+              {speech.listening ? "Done" : "Talk"}
+            </Button>
+          ) : null}
+          <p className="mt-2 min-h-5 text-sm text-muted-foreground" aria-live="polite">
+            {speechCaption(speech, draft)}
+          </p>
+          <div className="mt-2 flex items-center gap-2">
             <label htmlFor={inputId} className="sr-only">
-              Message
+              Phrase
             </label>
             <Input
               id={inputId}
-              value={draft}
+              value={speech.listening ? speech.liveText : draft}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder={health?.suggestions[0] ? `Try “${health.suggestions[0]}”` : "Tell the house what you want"}
+              placeholder={health?.suggestions[0] ? `Or type “${health.suggestions[0]}”` : "Or type what you want"}
               maxLength={400}
               autoComplete="off"
               enterKeyHint="send"
+              readOnly={speech.listening}
               disabled={Boolean(healthError)}
+              aria-invalid={speech.error ? true : undefined}
               className="h-12 px-3 text-base md:text-base"
             />
-            <Button type="submit" className="h-12 px-4 text-base" disabled={sending || Boolean(healthError) || !draft.trim()}>
+            <Button
+              type="submit"
+              variant={phraseReady ? "default" : "outline"}
+              className="h-12 px-4 text-base"
+              disabled={sending || Boolean(healthError) || !phraseReady}
+            >
               Send
             </Button>
           </div>
@@ -250,6 +288,36 @@ function backendLabel(backend: HealthInfo["backend"]): string {
   if (backend === "homeassistant") return "Home Assistant";
   if (backend === "hue") return "Hue bridge";
   return "Mock house";
+}
+
+function speechCaption(
+  speech: {
+    ready: boolean;
+    supported: boolean;
+    blockedReason: string | null;
+    listening: boolean;
+    liveText: string;
+    error: string | null;
+  },
+  draft: string,
+): string {
+  if (!speech.ready) return "";
+  if (speech.error) return speech.error;
+  if (!speech.supported) return speech.blockedReason ?? "You can still type.";
+  if (speech.listening) {
+    return speech.liveText
+      ? `Hearing “${shortPhrase(speech.liveText)}”. Tap Send to tell the house.`
+      : "Listening… say a phrase, then Send.";
+  }
+  const phrase = draft.trim();
+  if (phrase) return `Send “${shortPhrase(phrase)}” to the house, or tap Talk to say it again.`;
+  return "Tap Talk and say what you want. Typing works too.";
+}
+
+function shortPhrase(text: string): string {
+  const trimmed = text.trim().replace(/\s+/g, " ");
+  if (trimmed.length <= 80) return trimmed;
+  return `${trimmed.slice(0, 77)}…`;
 }
 
 function sessionId(): string {

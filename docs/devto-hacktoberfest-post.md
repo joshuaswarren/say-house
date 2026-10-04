@@ -6,9 +6,9 @@ Tags: `#devchallenge` `#weekendchallenge` `#hf26challenge`
 
 A friend should not have to open the Hue app, or Home Assistant, to dim a room or turn a bedroom light off. They already know the words. “Kitchen bright.” “Movie lights.” “All lights off.”
 
-Say House is one page for that. Type a sentence. The house does the one thing on the list, and the page says what it did.
+Say House is one page for that. Tap Talk and say the sentence. The words show up as you speak, Send confirms them, and the house does the one thing on the list. Typing uses the same path.
 
-The repo is generic. The demo allowlist is a fictional home with sample entity ids. A real house stays in a gitignored `config.local.yaml`. Judges can run the whole story in mock mode with no bridge and no token.
+The repo is generic. The demo allowlist is a fictional home with sample entity ids. A real house stays in a gitignored `config.local.yaml`. Mock mode runs the story with no bridge and no token.
 
 ## Why the model stays local
 
@@ -16,8 +16,7 @@ The sentence is about the house. Which room, what “bright” means, whether ev
 
 Say House talks to an OpenAI-compatible local server. The one this house already runs is a LiteLLM proxy in front of an open-weight model:
 
-- LAN base URL: `http://192.168.10.150:4000/v1`
-- Tailscale base URL: `http://100.72.149.4:4000/v1`
+- Base URL: `http://LITELLM_HOST:4000/v1` (set `LLM_BASE_URL` in gitignored `.env`; a LAN or Tailscale host stays there)
 - Preferred alias: `qwen3.8-27b-64k-nothink`
 - Fallback alias: `qwen3.8-27b-64k-fast`
 - Bearer key from `LLM_API_KEY` (or `LITELLM_API_KEY` / `OPENAI_API_KEY`), never committed
@@ -46,9 +45,5 @@ Locks, the garage, alarms, cameras, climate setpoints, water, vacuums, vents, an
 8. “open the garage” → refused
 9. Tick Dry run, then “bedroom off” → the sentence, and nothing sent
 10. Point `LLM_BASE_URL` at the proxy and try “make it cozy where we cook” → `kitchen relax`, if the model is up
-
-## Honest category note
-
-This is a Build for a Friend weekend project. The open-model piece is a local open-weight model behind an OpenAI-compatible proxy. I am not claiming Render, TabPFN, Tinker, Arduino, DigitalOcean, or the partner categories (Backboard, ElevenLabs, Entire, GitHub Copilot, Mastra, MongoDB Atlas, Sentry, SerpApi, Temporal, Tiger Data).
 
 MIT license. Mock mode needs no keys.
