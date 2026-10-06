@@ -1,5 +1,7 @@
 # Say House
 
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/joshuaswarren)
+
 Say House is a small web page for someone who lives in a house and does not want another dashboard. They say “kitchen bright”, “bedroom off”, or “movie lights”. A local open-weight model turns that into one allowlisted action. Home Assistant or a Philips Hue bridge does the work. The Hue app can stay closed.
 
 The app is generic. `config.example.yaml` is a short fictional allowlist. `config.example.demo-home.yaml` is a longer fictional demo (see [docs/demo-home.md](docs/demo-home.md)). A real house belongs in `config.local.yaml` or `config.yaml`, both gitignored, with tokens in `.env` or `.env.local`. Nothing about a specific household is hardcoded.
@@ -208,6 +210,14 @@ npm run discover
 ## Hacktoberfest
 
 Built for [DEV Hacktoberfest 2026, Weekend Challenge #1: Build for a Friend](https://dev.to/challenges/hacktoberfest-weekend-2026-10-01). The draft post is [docs/devto-hacktoberfest-post.md](docs/devto-hacktoberfest-post.md).
+
+## Support
+
+Every bit of support helps keep say-house alive and free. If you are able, [sponsor on GitHub](https://github.com/sponsors/joshuaswarren) or send a Lightning donation to `joshuaswarren@strike.me` to directly fund continued development and new integrations.
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?style=for-the-badge)](https://github.com/sponsors/joshuaswarren)
+
+If financial support is not an option, you can still make a big difference: [star the repo](https://github.com/joshuaswarren/say-house), share it, or recommend it to a colleague. Word of mouth is how most people find say-house.
 
 ## License
 
