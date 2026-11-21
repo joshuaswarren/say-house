@@ -10,7 +10,8 @@
     "start": "next start -p 47231 -H 0.0.0.0",
     "lint": "eslint",
     "smoke": "tsx scripts/smoke.ts",
-    "discover": "tsx scripts/discover.ts"
+    "discover": "tsx scripts/discover.ts",
+    "test": "tsx --test \"test/*.test.ts\""
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
